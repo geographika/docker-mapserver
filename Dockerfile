@@ -1,7 +1,8 @@
-FROM ghcr.io/osgeo/gdal:ubuntu-small-3.10.1 AS gdal
+#FROM ghcr.io/osgeo/gdal:ubuntu-small-3.10.1 AS gdal
+FROM ghcr.io/osgeo/gdal:ubuntu-full-3.10.1 AS gdal
 
 FROM gdal AS builder
-LABEL maintainer="Camptocamp <info@camptocamp.com>"
+LABEL maintainer="sethg@geographika.net"
 SHELL ["/bin/bash", "-o", "pipefail", "-cux"]
 
 RUN --mount=type=cache,target=/var/cache,sharing=locked \
@@ -68,7 +69,7 @@ RUN ninja install \
     && if test "${WITH_ORACLE}" = "ON"; then rm -rf /usr/local/lib/sdk; fi
 
 FROM gdal AS runner
-LABEL maintainer="Camptocamp <info@camptocamp.com>"
+LABEL maintainer="sethg@geographika.net"
 SHELL ["/bin/bash", "-o", "pipefail", "-cux"]
 
 # Let's copy a few of the settings from /etc/init.d/apache2
@@ -116,6 +117,10 @@ COPY --from=builder /usr/local/share/mapserver /usr/local/share/mapserver/
 COPY --from=builder /src/share/ogcapi/templates/html-bootstrap4 /usr/local/share/mapserver/ogcapi/templates/html-bootstrap4/
 
 COPY runtime /
+
+# add custom template
+# ensure this folder is excluded in .dockerignore or it will not be found
+COPY templates/barebones/*.html /usr/local/share/mapserver/ogcapi/templates/barebones/
 
 RUN ldconfig
 
